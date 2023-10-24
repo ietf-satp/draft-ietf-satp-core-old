@@ -24,7 +24,7 @@ $ make
 ```
 
 Command line usage requires that you have the necessary software installed. See
-[the instructions](https://github.com/rafaelapb/i-d-template/blob/main/doc/SETUP.md).
+[the instructions](https://github.com/martinthomson/i-d-template/blob/main/doc/SETUP.md).
 
 ## Test locally
 
@@ -32,4 +32,4 @@ To test the github actions locally, run: `act -s GITHUB_TOKEN="$(gh auth token)"
 
 ### Acknowledgments
 
-This repo uses a fork of the template of [rafaelapb i-d template](https://github.com/rafaelapb/i-d-template/tree/main).
+This repo uses a fork of the template of [martinthomson i-d template](https://github.com/martinthomson/i-d-template/tree/main).

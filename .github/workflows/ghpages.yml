@@ -3,59 +3,91 @@ name: "Update Editor's Copy"
 on:
   push:
     paths-ignore:
-    - README.md
-    - CONTRIBUTING.md
-    - LICENSE.md
-    - .gitignore
+      - history/
+      - figures/
+      - README.md
+      - CONTRIBUTING.md
+      - LICENSE.md
+      - .gitignore
   pull_request:
     paths-ignore:
-    - README.md
-    - CONTRIBUTING.md
-    - LICENSE.md
-    - .gitignore
+      - history/
+      - figures/
+      - README.md
+      - CONTRIBUTING.md
+      - LICENSE.md
+      - .gitignore
 
 jobs:
   build:
     name: "Update Editor's Copy"
     runs-on: ubuntu-latest
     steps:
-    - name: "Checkout"
-      uses: actions/checkout@v3
+      - name: "Checkout"
+        uses: actions/checkout@v3
 
-    - name: "Setup"
-      id: setup
-      run: date -u "+date=%FT%T" >>"$GITHUB_OUTPUT"
+      - name: "Setup"
+        id: setup
+        run: date -u "+date=%FT%T" >>"$GITHUB_OUTPUT"
 
-    - name: "Caching"
-      uses: actions/cache@v3
-      with:
-        path: |
-          .refcache
-          .venv
-          .gems
-          node_modules
-          .targets.mk
-        key: i-d-${{ steps.setup.outputs.date }}
-        restore-keys: i-d-
+      - name: "Caching"
+        uses: actions/cache@v3
+        with:
+          path: |
+            .refcache
+            .venv
+            .gems
+            node_modules
+          key: i-d-${{ steps.setup.outputs.date }}
+          restore-keys: i-d-
 
-    - name: List files
-      run: ls -la
+      - name: List files
+        run: ls -la
 
-    - name: "Build Drafts"
-      uses: rafaelapb/i-d-template@main
-      with:
-        token: ${{ github.token }}
+      - name: Check for gh-pages branch
+        id: checkbranch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use the GitHub token for authentication with git
+          git remote set-url origin https://x-access-token:$GITHUB_TOKEN@github.com/${{ github.repository }}
 
-    - name: "Update GitHub Pages"
-      uses: rafaelapb/i-d-template@main
-      if: ${{ github.event_name == 'push' }}
-      with:
-        make: gh-pages
-        token: ${{ github.token }}
+          # Check for the gh-pages branch
+          BRANCH_EXIST=$(git ls-remote --heads origin gh-pages | wc -l)
 
-    - name: "Archive Built Drafts"
-      uses: actions/upload-artifact@v3
-      with:
-        path: |
-          draft-*.html
-          draft-*.txt
+          # Output the result
+          echo "BRANCH_EXIST=$BRANCH_EXIST" >> $GITHUB_ENV
+
+      - name: Run make command
+        if: env.BRANCH_EXIST == 0
+        uses: martinthomson/i-d-template@v1
+        with:
+          args: make -f setup.mk setup-ghpages
+
+
+      - name: "Build Drafts"
+        uses: martinthomson/i-d-template@v1
+        with:
+          token: ${{ github.token }}
+
+      # use       uses: martinthomson/i-d-template@v1 if needed
+      #    - name: create-gh-pages-branch
+      #     if: env.BRANCH_EXIST == 0
+      #    uses: martinthomson/i-d-template@main
+      #   with:
+      #    make: --file setup.mk setup-ghpages
+      #   token: ${{ github.token }}
+
+      - name: "Update GitHub Pages"
+        uses: martinthomson/i-d-template@v1
+        if: ${{ github.event_name == 'push' }}
+        with:
+          make: gh-pages
+          token: ${{ github.token }}
+
+      - name: "Archive Built Drafts"
+        uses: actions/upload-artifact@v3
+        with:
+          path: |
+            draft-*.html
+            draft-*.txt
