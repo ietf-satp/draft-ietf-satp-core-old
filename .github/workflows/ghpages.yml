@@ -38,6 +38,9 @@ jobs:
         key: i-d-${{ steps.setup.outputs.date }}
         restore-keys: i-d-
 
+    - name: List files
+      run: ls -la
+
     - name: "Build Drafts"
       uses: rafaelapb/i-d-template@main
       with:
